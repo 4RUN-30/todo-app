@@ -20,6 +20,11 @@ public class TodoController {
         this.airtableService = airtableService;
     }
 
+    @GetMapping("/health")
+    public String health() {
+        return "OK";
+    }
+
     @GetMapping
     public List<TodoDto> getTodos() {
         logger.info("GET /todos - fetching all todos");
