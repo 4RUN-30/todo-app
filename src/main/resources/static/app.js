@@ -4,10 +4,11 @@ async function addTodo() {
 
   if (!title) return;
 
-  await fetch("/todos", {
+  // Send a JSON object matching the Todo controller's @RequestBody Todo parameter
+  await fetch("/todo", {
     method: "POST",
-    headers: { "Content-Type": "text/plain" },
-    body: title
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title })
   });
 
   input.value = "";
@@ -15,7 +16,7 @@ async function addTodo() {
 }
 
 async function loadTodos() {
-  const res = await fetch("/todos");
+  const res = await fetch("/todo");
   const todos = await res.json();
 
   document.getElementById("output").innerHTML =
@@ -34,14 +35,28 @@ async function loadTodos() {
 }
 
 async function complete(id) {
-  await fetch(`/todos/${id}/complete`, {
-    method: "PUT"
-  });
+  // The backend expects a full Todo object on PUT /todo/{id}.
+  // Fetch the current todo, mark it completed and PUT the updated object.
+  try {
+    const res = await fetch(`/todo/${id}`);
+    if (!res.ok) throw new Error('Failed to fetch todo');
+    const todo = await res.json();
+    todo.completed = true;
+    todo.completedAt = new Date().toISOString();
+
+    await fetch(`/todo/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(todo)
+    });
+  } catch (e) {
+    console.error('Could not complete todo', e);
+  }
   loadTodos();
 }
 
 async function removeTodo(id) {
-  await fetch(`/todos/${id}`, {
+  await fetch(`/todo/${id}`, {
     method: "DELETE"
   });
   loadTodos();
